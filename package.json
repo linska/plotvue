@@ -1,15 +1,33 @@
 {
   "name": "plotvue",
-  "private": true,
-  "version": "0.0.0",
+  "private": false,
+  "version": "0.1.0",
+  "description": "Lightweight chart components for Vue 3",
   "type": "module",
+  "license": "MIT",
+  "sideEffects": false,
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "build": "vue-tsc -p tsconfig.json --declaration --emitDeclarationOnly && vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit"
   },
-  "dependencies": {
-    "vue": "^3.5.22"
+  "files": [
+    "dist"
+  ],
+  "main": "dist/plotvue.umd.js",
+  "module": "dist/plotvue.es.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/plotvue.es.js",
+      "require": "./dist/plotvue.umd.js"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.0"
   },
   "devDependencies": {
     "@types/node": "^24.6.0",
@@ -17,6 +35,10 @@
     "@vue/tsconfig": "^0.8.1",
     "typescript": "~5.9.3",
     "vite": "^7.1.7",
-    "vue-tsc": "^3.1.0"
+    "vue-tsc": "^3.1.0",
+    "vue": "^3.5.22"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

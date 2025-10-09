@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import {computed} from 'vue'
-import {getUnit} from "../utils/convertToUnit.ts";
-import {polarToCartesian} from "../utils/convertCoordinates.ts";
-import {generateShades} from "../utils/colors.ts";
+import {getUnit} from "../utils/convertToUnit";
+import {polarToCartesian} from "../utils/convertCoordinates";
+import {generateShades} from "../utils/colors";
 
 type Item = { value: number; title: string; subtitle?: string; color?: string }
 
