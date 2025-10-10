@@ -6,6 +6,5 @@ const Plotvue: Plugin = {
     app.component('PlotPie', PlotPie)
   },
 }
-
-export default Plotvue
 export { PlotPie }
+export default Plotvue

@@ -8,7 +8,7 @@ export default defineConfig({
     lib: {
       entry: path.resolve(__dirname, 'src/main.ts'),
       name: 'PlotVue',
-      fileName: (format) => `plot-vue.${format}.js`,
+      fileName: (format) => `plotvue.${format}.js`,
     },
     rollupOptions: {
       external: ['vue'],
