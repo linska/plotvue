@@ -15,10 +15,16 @@ const props = withDefaults(defineProps<{
   height?: string | number
   color?: string
   showPercent?: boolean
+  borderColor?: string
+  borderWidth?: number
+  legendPosition? : 'top' | 'bottom' | 'left' | 'right'
 }>(), {
   noDataText: 'No data',
   color: '#253f80',
   showPercent: false,
+  borderColor: '#ffffff',
+  borderWidth: 2,
+  legendPosition: 'bottom'
 })
 
 const itemsNormalized = computed<Item[]>(() => {
@@ -52,7 +58,7 @@ const sectorList = computed<Path[]>(() => {
 
   const data = itemsNormalized.value
   if (!data.length) {
-    return [{ start: 0, end: 0, center: 0, angle: 0, percent: 0, color: props.color }]
+    return [{start: 0, end: 0, center: 0, angle: 0, percent: 0, color: props.color}]
   }
 
   const quoterList: [Path[], Path[], Path[], Path[]] = [[], [], [], []]
@@ -66,7 +72,7 @@ const sectorList = computed<Path[]>(() => {
     const end = start + angle
     const percent = Math.round((item.value * 100) / total.value)
     const color = item.color || colors.value[index]
-    const sector = { start, end, center, angle, percent, color }
+    const sector = {start, end, center, angle, percent, color}
     const quoter = center < 90 ? 0 : center < 180 ? 1 : center < 270 ? 2 : 3
     quoterList[quoter].push(sector)
     start = end
@@ -90,61 +96,125 @@ const sectorList = computed<Path[]>(() => {
 
   return arranged.flat()
 })
+
+const slotItems = computed(() => {
+  return itemsNormalized.value.map((item, index) => ({
+    ...item,
+    color: colors.value[index],
+    percent: Math.round((item.value * 100) / total.value)
+  }))
+})
+
+const viewBox = computed(() => `${props.borderWidth > 0 ? -props.borderWidth : 0 } ${props.borderWidth > 0 ? -props.borderWidth : 0 } ${size + props.borderWidth * 2} ${size + props.borderWidth * 2}`)
 </script>
 
 <template>
   <div
     class="plot_pie"
-    :style="{
+    :class="`plot_pie--${legendPosition}`"
+  >
+    <slot name="no-data" v-if="sectorList[0].end - sectorList[0].start >= 360">
+      <svg
+        class="plot-image"
+        :stroke-width="borderWidth"
+        :stroke="borderColor"
+        :viewBox="viewBox"
+        :style="{
       maxWidth: maxWidthNormalized,
       maxHeight: maxHeightNormalized,
       width: widthNormalized,
       height: heightNormalized,
   }"
-  >
-    <svg viewBox="0 0 200 200">
-      <template v-for="(sector, s) in sectorList" :key="s">
+      >
         <circle
-          v-if="sector.end - sector.start >= 360"
           :cx="100"
           :cy="100"
           :r="100"
-          :fill="sector.color"
+          :fill="sectorList[0].color"
         />
+      </svg>
+    </slot>
+    <slot v-else :items="sectorList">
+      <svg
+        class="plot-image"
+        :viewBox="viewBox"
+        :stroke-width="borderWidth"
+        :stroke="borderColor"
+        :style="{
+      maxWidth: maxWidthNormalized,
+      maxHeight: maxHeightNormalized,
+      width: widthNormalized,
+      height: heightNormalized,
+  }"
+      >
         <path
-          v-else
+          v-for="(sector, s) in sectorList" :key="s"
           :d="sector.d"
           :fill="sector.color"
         />
-      </template>
-    </svg>
-    <div>
-      <div v-for="(sector, s) in sectorList" :key="s">
-        <div class="color_box" :style="`background-color: ${sector.color}`"></div>
-        <span>{{props.items?.[s]?.title}}</span>
-        <span v-if="props.showPercent" class="percent"> - {{ sector.percent }}%</span>
+      </svg>
+    </slot>
+    <slot name="legend" :items="slotItems">
+      <div class="plot-legend">
+        <div v-for="(sector, s) in sectorList" :key="s" class="plot-legend__item">
+          <div class="plot-legend__color" :style="`background-color: ${sector.color}`"></div>
+          <div class="plot-legend__title">{{ itemsNormalized[s]?.title }}</div>
+          <div v-if="props.showPercent" class="plot-legend__percent"> - {{ sector.percent }}%</div>
+        </div>
       </div>
-    </div>
+    </slot>
   </div>
 </template>
 
 <style scoped>
 .plot_pie {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
+}
 
-  .color_box {
-    width: 10px;
-    height: 10px;
-    display: inline-block;
-    margin-right: 5px;
-  }
+.plot_pie--top {
+  flex-direction: column-reverse;
+}
 
-  .percent {
-    white-space: pre;
-  }
+.plot_pie--bottom{
+  flex-direction: column;
+}
+
+.plot_pie--left {
+  flex-direction: row-reverse;
+}
+
+.plot_pie--right {
+  flex-direction: row;
+}
+
+.plot-image, .plot-legend {
+  flex-grow: 1;
+}
+
+.plot-legend__item {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plot-legend__title {
+  flex-grow: 1;
+}
+
+.plot-legend__color {
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+  min-height: 10px;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.plot-legend__percent {
+  white-space: pre;
 }
 </style>
