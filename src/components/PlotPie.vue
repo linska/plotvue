@@ -3,6 +3,7 @@ import {computed} from 'vue'
 import {getUnit} from "../utils/convertToUnit";
 import {polarToCartesian} from "../utils/convertCoordinates";
 import {generateShades} from "../utils/colors";
+import SvgDefs from "./SvgDefs.vue";
 
 type Item = { value: number; title: string; subtitle?: string; color?: string }
 
@@ -15,16 +16,12 @@ const props = withDefaults(defineProps<{
   height?: string | number
   color?: string
   showPercent?: boolean
-  borderColor?: string
-  borderWidth?: number
-  legendPosition? : 'top' | 'bottom' | 'left' | 'right'
+  legendPosition?: 'top' | 'bottom' | 'left' | 'right' | 'center'
 }>(), {
   noDataText: 'No data',
-  color: '#253f80',
+  color: '#072910',
   showPercent: false,
-  borderColor: '#ffffff',
-  borderWidth: 2,
-  legendPosition: 'bottom'
+  legendPosition: 'bottom',
 })
 
 const itemsNormalized = computed<Item[]>(() => {
@@ -105,7 +102,7 @@ const slotItems = computed(() => {
   }))
 })
 
-const viewBox = computed(() => `${props.borderWidth > 0 ? -props.borderWidth : 0 } ${props.borderWidth > 0 ? -props.borderWidth : 0 } ${size + props.borderWidth * 2} ${size + props.borderWidth * 2}`)
+const viewBox = computed(() => `0 0 200 200`)
 </script>
 
 <template>
@@ -116,21 +113,28 @@ const viewBox = computed(() => `${props.borderWidth > 0 ? -props.borderWidth : 0
     <slot name="no-data" v-if="sectorList[0].end - sectorList[0].start >= 360">
       <svg
         class="plot-image"
-        :stroke-width="borderWidth"
-        :stroke="borderColor"
         :viewBox="viewBox"
         :style="{
-      maxWidth: maxWidthNormalized,
-      maxHeight: maxHeightNormalized,
-      width: widthNormalized,
-      height: heightNormalized,
-  }"
+          maxWidth: maxWidthNormalized,
+          maxHeight: maxHeightNormalized,
+          width: widthNormalized,
+          height: heightNormalized,
+        }"
       >
+        <svg-defs grad-id="gradient" filter-id="filter"/>
         <circle
           :cx="100"
           :cy="100"
           :r="100"
           :fill="sectorList[0].color"
+        />
+        <circle
+          :cx="100"
+          :cy="100"
+          :r="100"
+          fill="url(#gradient)"
+          filter="url(#filter)"
+          class="plot-image__shadow"
         />
       </svg>
     </slot>
@@ -138,8 +142,6 @@ const viewBox = computed(() => `${props.borderWidth > 0 ? -props.borderWidth : 0
       <svg
         class="plot-image"
         :viewBox="viewBox"
-        :stroke-width="borderWidth"
-        :stroke="borderColor"
         :style="{
       maxWidth: maxWidthNormalized,
       maxHeight: maxHeightNormalized,
@@ -147,15 +149,25 @@ const viewBox = computed(() => `${props.borderWidth > 0 ? -props.borderWidth : 0
       height: heightNormalized,
   }"
       >
+        <svg-defs grad-id="gradient" filter-id="filter"/>
         <path
           v-for="(sector, s) in sectorList" :key="s"
           :d="sector.d"
           :fill="sector.color"
+          :style="`animation-delay: ${s * 0.05}s`"
+        />
+        <path
+          v-for="(sector, s) in sectorList" :key="s + '_'"
+          :d="sector.d"
+          fill="url(#gradient)"
+          :style="`animation-delay: ${s * 0.05}s`"
+          filter="url(#filter)"
+          class="plot-image__shadow"
         />
       </svg>
     </slot>
     <slot name="legend" :items="slotItems">
-      <div class="plot-legend">
+      <div class="plot-legend" v-if="props.legendPosition !== 'center'">
         <div v-for="(sector, s) in sectorList" :key="s" class="plot-legend__item">
           <div class="plot-legend__color" :style="`background-color: ${sector.color}`"></div>
           <div class="plot-legend__title">{{ itemsNormalized[s]?.title }}</div>
@@ -178,7 +190,7 @@ const viewBox = computed(() => `${props.borderWidth > 0 ? -props.borderWidth : 0
   flex-direction: column-reverse;
 }
 
-.plot_pie--bottom{
+.plot_pie--bottom {
   flex-direction: column;
 }
 
@@ -216,5 +228,36 @@ const viewBox = computed(() => `${props.borderWidth > 0 ? -props.borderWidth : 0
 
 .plot-legend__percent {
   white-space: pre;
+}
+
+.plot-image__shadow {
+  transform-origin: center;
+  animation: shadow 0.3s ease-in-out forwards;
+}
+
+path:not(.plot-image__shadow), circle:not(.plot-image__shadow) {
+  opacity: 0;
+  transform-origin: center;
+  animation: path 0.3s ease-in-out forwards;
+}
+
+@keyframes path {
+  from {
+    opacity: 0;
+    scale: 0.7;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes shadow {
+  from {
+    scale: 0.7;
+  }
+  to {
+    scale: 1;
+  }
 }
 </style>
