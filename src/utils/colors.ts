@@ -1,24 +1,38 @@
-const hexToRgb = (hex: string) => {
-  const v = parseInt(hex.replace('#', ''), 16)
+export type RGB = { r: number; g: number; b: number }
+
+const hexToRgb = (hex: string):RGB => {
+  const cleanHex = hex.replace('#', '')
+  const v = parseInt(cleanHex, 16)
+
   return {r: v >> 16, g: (v >> 8) & 0xff, b: v & 0xff}
 }
 
-const rgbToHex = (r: number, g: number, b: number) =>
-  `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
+const rgbToHex = (r: number, g: number, b: number) => {
+  const clamp = (val: number) => Math.max(0, Math.min(255, Math.round(val)))
 
+  const cr = clamp(r)
+  const cg = clamp(g)
+  const cb = clamp(b)
+
+  return `#${((1 << 24) + (cr << 16) + (cg << 8) + cb).toString(16).slice(1)}`
+}
 
 const generateShades = (hex: string, count = 5): string[] => {
-  const shades: string[] = []
+  if (count <= 0) return []
+
+  const shades: string[] = new Array(count)
   const rgb = hexToRgb(hex)
+  const doubleCount = 2 * count
+
   for (let i = 0; i < count; i++) {
-    const ratio = i / (2 * count)
-    const mix = (a: number, b: number) => Math.round(a + (b - a) * ratio)
-    const r = mix(rgb.r, 255)
-    const g = mix(rgb.g, 255)
-    const b = mix(rgb.b, 255)
-    shades.push(rgbToHex(r, g, b))
+    const ratio = i / doubleCount
+    const r = rgb.r + (255 - rgb.r) * ratio
+    const g = rgb.g + (255 - rgb.g) * ratio
+    const b = rgb.b + (255 - rgb.b) * ratio
+    shades[i] = rgbToHex(r, g, b)
   }
+
   return shades
 }
 
-export {generateShades}
+export {generateShades, hexToRgb, rgbToHex}
