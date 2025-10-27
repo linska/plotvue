@@ -8,5 +8,4 @@ const Plotvue: Plugin = {
     app.component('PlotPie', PlotPie)
   },
 }
-export { PlotPie }
 export default Plotvue
