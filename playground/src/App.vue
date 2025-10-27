@@ -14,5 +14,4 @@ const items = [
     :show-percent="true"
     max-width="500"
   />
-
 </template>
